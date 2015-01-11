@@ -1,0 +1,137 @@
+#!/bin/bash
+
+#[ Script ]--------------------------------------------------------------------#
+#                                                                              #
+# tcpstates                                                                    #
+# Count  of  main  TCP  states and print output as a chosen format (xml, json, #
+# key: value)                                                                  #
+#                                                                              #
+# reimlima@gmail.com                                                           #
+# $Id: tcpstates,v 1 2015/01/11 rlima Exp rlima $                              #
+#                                                                              #
+#------------------------------------------------------------------------------#
+# Copyright (c) 2015 Reinaldo Marques de Lima reimlima@gmail.com               #
+#                                                                              #
+# PT-br:                                                                       #
+# A permissão  é  concedida,  a título gratuito, a qualquer pessoa que obtenha #
+# uma   cópia   deste   software   e   arquivos   de  documentação  associados #
+# (o "Software"),  para  lidar  com  o  Software sem restrição, incluindo, sem #
+# limitação,  os  direitos  de  usar,  copiar,  modificar,  mesclar, publicar, #
+# distribuir,  sublicenciar,  e / ou vender cópias do Software, e permitir que #
+# as  pessoas  a  quem  o  Software  é fornecido o façam, sujeito às seguintes #
+# condições:                                                                   #
+#                                                                              #
+# O  aviso de copyright acima e este aviso de permissão devem ser incluídos em #
+# todas as cópias ou partes substanciais do Software.                          #
+#                                                                              #
+# O  SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA #
+# OU  IMPLÍCITA,  INCLUINDO,  SEM  LIMITAÇÃO, AS GARANTIAS DE COMERCIALIZAÇÃO, #
+# ADEQUAÇÃO  A  UM  DETERMINADO  FIM E NÃO VIOLAÇÃO. EM NENHUM CASO OS AUTORES #
+# OU  DIREITOS AUTORAIS TITULARES  SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, #
+# DANOS  OU  OUTRAS  RESPONSABILIDADES,  SEJA  EM  UMA  AÇÃO DE CUMPRIMENTO DE #
+# CONTRATO OU DE OUTRA FORMA, DECORRENTE DE, OU EM CONEXÃO COM O SOFTWARE OU O #
+# USO OU OUTRAS FUNÇÕES DO SOFTWARE.                                           #
+#                                                                              #
+# Exceto  conforme  contido no presente aviso, o nome do (s) dos detentores de #
+# direitos  autorais acima não devem ser utilizados em publicidade ou de outra #
+# forma  para  promover  a venda, uso ou outras negociações deste Software sem #
+# autorização prévia por escrito.                                              #
+#                                                                              #
+#----------------------------                                                  #
+#                                                                              #
+# EN:                                                                          #
+# Permission is hereby granted, free of charge, to any person obtaining a copy #
+# of  this  software  and  associated  documentation  files  (the "Software"), #
+# to  deal  in  the Software without restriction, including without limitation #
+# the  rights  to  use,  copy, modify, merge, publish, distribute, sublicense, #
+# and/or  sell  copies  of  the  Software,  and  to permit persons to whom the #
+# Software is furnished to do so, subject to the following conditions:         #
+#                                                                              #
+# The  above  copyright notice and this permission notice shall be included in #
+# all copies or substantial portions of the Software.                          #
+#                                                                              #
+# THE  SOFTWARE  IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR #
+# IMPLIED,  INCLUDING  BUT  NOT  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, #
+# FITNESS  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE #
+# AUTHORS  OR  COPYRIGHT  HOLDERS  BE  LIABLE  FOR ANY CLAIM, DAMAGES OR OTHER #
+# LIABILITY,   WHETHER   IN   AN   ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE, #
+# ARISING FROM,  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER #
+# DEALINGS IN THE SOFTWARE.                                                    #
+#                                                                              #
+# Except  as  contained  in  this  notice,  the name(s) of the above copyright #
+# holders  shall  not be used in advertising or otherwise to promote the sale, #
+# use or other dealings in this Software without prior written authorization.  #
+#                                                                              #
+#------------------------------------------------------------------------------#
+
+#[ Command Variables, portability always! ]------------------------------------#
+
+AWK=$(which awk)
+SED=$(which sed)
+GREP=$(which grep)
+SORT=$(which sort)
+UNIQ=$(which uniq)
+NETSTAT=$(which netstat)
+
+#[ Script Variables  ]---------------------------------------------------------#
+
+listen=0
+syn_sent=0
+syn_reveiced=0
+established=0
+close_wait=0
+time_wait=0
+
+timestamp=$(date +%s)
+
+#[ Functions ]-----------------------------------------------------------------#
+
+usage(){
+	echo
+	echo "usage:"
+	echo "$(basename $0) [IP:PORTA]"
+	echo
+	exit
+}
+
+tcpconnections(){
+	IFS='
+'
+	RESULTS=$($NETSTAT -tanp 2>/dev/null | $GREP $IPPORT | $AWK '{print $6}' | $SORT | $UNIQ -c)
+	for i in $RESULTS ; do
+		TEST=$(echo ${i} | $AWK '{print $2}')
+		case $TEST in
+			LISTEN)
+				listen=$(echo ${i} | $AWK '{print $1}')
+				;;
+			SYN_SENT)
+				syn_sent=$(echo ${i} | $AWK '{print $1}')
+				;;
+			SYN_RECEIVED)
+				syn_reveiced=$(echo ${i} | $AWK '{print $1}')
+				;;
+			ESTABLISHED)
+				established=$(echo ${i} | $AWK '{print $1}')
+				;;
+			CLOSE_WAIT)
+				close_wait=$(echo ${i} | $AWK '{print $1}')
+				;;
+			TIME_WAIT)
+				time_wait=$(echo ${i} | $AWK '{print $1}')
+				;;
+		esac
+	done
+	output="listen $listen syn_sent $syn_sent syn_reveiced $syn_reveiced established $established close_wait $close_wait time_wait $time_wait"
+	echo "$message"
+	exit
+}
+
+#[ Tests, tests, tests ]-------------------------------------------------------#
+
+[ $1 ] || usage
+
+IPPORT=$(echo $1 |  sed '/\(\([1]\?[0-9]\{1,2\}\|2\([0-4][0-9]\|5[0-5]\)\)\.\)\{3\}\([1]\?[0-9]\{1,2\}\|2\([0-4][0-9]\|5[0-5]\)\):[0-9]\{1,\}/!d')
+
+[ $IPPORT ] || usage
+
+tcpconnections $IPPORT
