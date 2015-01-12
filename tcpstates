@@ -77,12 +77,14 @@ NETSTAT=$(which netstat)
 
 listen=0
 syn_sent=0
-syn_reveiced=0
+syn_received=0
 established=0
 close_wait=0
 time_wait=0
-
 timestamp=$(date +%s)
+
+# Define output format below
+outputformat="json"
 
 #[ Functions ]-----------------------------------------------------------------#
 
@@ -108,7 +110,7 @@ tcpconnections(){
 				syn_sent=$(echo ${i} | $AWK '{print $1}')
 				;;
 			SYN_RECEIVED)
-				syn_reveiced=$(echo ${i} | $AWK '{print $1}')
+				syn_received=$(echo ${i} | $AWK '{print $1}')
 				;;
 			ESTABLISHED)
 				established=$(echo ${i} | $AWK '{print $1}')
@@ -121,8 +123,16 @@ tcpconnections(){
 				;;
 		esac
 	done
-	output="listen $listen syn_sent $syn_sent syn_reveiced $syn_reveiced established $established close_wait $close_wait time_wait $time_wait"
-	echo "$message"
+
+	if [ $outputformat = "json" ] ; then
+		output="{\"tcpstates\": [ {\"timestamp\": $timestamp}, {\"listen\": $listen}, {\"syn_sent\": $syn_sent}, {\"syn_received\": $syn_received}, {\"established\": $established}, {\"close_wait\": $close_wait}, {\"time_wait\": >$time_wait} ]}"
+	elif [ $outputformat = "xml" ] ; then
+		output="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\t<tcpstates>\n\t\t<timestamp>$timestamp</timestamp>\n\t\t<listen>$listen</listen>\n\t\t<syn_sent>$syn_sent</syn_sent>\n\t\t<syn_received>$syn_received</syn_received>\n\t\t<established>$established</established>\n\t\t<close_wait>$close_wait</close_wait>\n\t\t<time_wait>$time_wait</time_wait>\n\t</tcpstates>"
+	else
+		output="listen $listen syn_sent $syn_sent syn_received $syn_received established $established close_wait $close_wait time_wait $time_wait"
+	fi
+
+	echo "$output"
 	exit
 }
 
