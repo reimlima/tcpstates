@@ -91,7 +91,7 @@ outputformat="json"
 usage(){
 	echo
 	echo "usage:"
-	echo "$(basename $0) [IP:PORTA]"
+	echo "$(basename $0) [IP:PORT]"
 	echo
 	exit
 }
