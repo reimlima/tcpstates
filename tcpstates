@@ -125,14 +125,14 @@ tcpconnections(){
 	done
 
 	if [ $outputformat = "json" ] ; then
-		output="{\"tcpstates\": [ {\"timestamp\": $timestamp}, {\"listen\": $listen}, {\"syn_sent\": $syn_sent}, {\"syn_received\": $syn_received}, {\"established\": $established}, {\"close_wait\": $close_wait}, {\"time_wait\": >$time_wait} ]}"
+		output="{\"tcpstates\": [ {\"hostname\": $HOSTNAME}, {\"timestamp\": $timestamp}, {\"listen\": $listen}, {\"syn_sent\": $syn_sent}, {\"syn_received\": $syn_received}, {\"established\": $established}, {\"close_wait\": $close_wait}, {\"time_wait\": $time_wait} ]}"
 	elif [ $outputformat = "xml" ] ; then
-		output="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\t<tcpstates>\n\t\t<timestamp>$timestamp</timestamp>\n\t\t<listen>$listen</listen>\n\t\t<syn_sent>$syn_sent</syn_sent>\n\t\t<syn_received>$syn_received</syn_received>\n\t\t<established>$established</established>\n\t\t<close_wait>$close_wait</close_wait>\n\t\t<time_wait>$time_wait</time_wait>\n\t</tcpstates>"
+		output="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\t<tcpstates>\n\t\t<hostname>$HOSTNAME</hostname>\n\t\t<timestamp>$timestamp</timestamp>\n\t\t<listen>$listen</listen>\n\t\t<syn_sent>$syn_sent</syn_sent>\n\t\t<syn_received>$syn_received</syn_received>\n\t\t<established>$established</established>\n\t\t<close_wait>$close_wait</close_wait>\n\t\t<time_wait>$time_wait</time_wait>\n\t</tcpstates>"
 	else
 		output="listen $listen syn_sent $syn_sent syn_received $syn_received established $established close_wait $close_wait time_wait $time_wait"
 	fi
 
-	echo "$output"
+	echo -e "$output"
 	exit
 }
 
